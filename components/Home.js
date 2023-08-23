@@ -112,8 +112,6 @@ const styles = StyleSheet.create({
         width: 405,
         height: 160,
         borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "#e0c4a1",
     },
     app_name: {
         color: "#83433d",

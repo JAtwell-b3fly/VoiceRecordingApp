@@ -4,64 +4,91 @@ import { View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
 const Recording = () => {
     return(
         <View>
-        <View style={styles.header}>
+            <View style={styles.header}>
 
-            <View style={styles.overlay}></View>
+                <View style={styles.overlay}></View>
 
-                <View style={styles.heading_band}>
-                    <View style={styles.menu_div}>
+                    <View style={styles.heading_band}>
+                        <View style={styles.menu_div}>
+                            <TouchableOpacity>
+                                <Image
+                                    source={require("../assets/menu.png")}
+                                    style={styles.menu}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.app_name_container}>
+                            <Text style={styles.app_name}>Add Audio Title</Text>
+
+                            <View style={styles.avatar_div}>
+                                <TouchableOpacity>
+                                    <Image
+                                        style={styles.avatar}
+                                        source={require("../assets/avatar1.jpg")}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.content}>
                         <TouchableOpacity>
+                            <View style={styles.record_btn_fill}>
+                                <Image
+                                    style={styles.record_btn}
+                                    source={require("../assets/neon_pink_mic.jpg")}
+                                />
+                            </View>
+
+                        </TouchableOpacity>
+
+                        <Text style={styles.time}>00.02.36</Text>
+                    <View>
+
+                    <Image
+                        style={styles.footer}
+                        resizeMode="cover"
+                        source={require("../assets/sound_wave.jpg")}
+                    />
+
+                <View style={styles.btns_div}>
+                    <View style={styles.btns}>
+                        <TouchableOpacity style={styles.cancel_btn}>
                             <Image
-                                source={require("../assets/menu.png")}
-                                style={styles.menu}
+                                style={styles.cancel_btn_img}
+                                source={require("../assets/cross.png")}
+                            />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.save_btn}>
+                            <Image
+                                style={styles.save_btn_image}
+                                source={require("../assets/check.png")}
                             />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.app_name_container}>
-                        <Text style={styles.app_name}>Add Audio Title</Text>
-                        <View style={styles.avatar_div}>
-                            <TouchableOpacity>
-                                <Image
-                                    style={styles.avatar}
-                                    source={require("../assets/avatar1.jpg")}
-                                    resizeMode="contain"
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-            </View>
+                    <TouchableOpacity style={styles.pause_play_btn}>
+                            <Image
+                                style={styles.pause_play_btn_img}
+                                source={require("../assets/pause_pink_red.png")}
+                            />
+                        </TouchableOpacity>
+                </View>
 
-            <View style={styles.content}>
-                <TouchableOpacity>
-                    <View style={styles.record_btn_fill}>
-                    <Image
-                        style={styles.record_btn}
-                        source={require("../assets/neon_pink_mic.jpg")}
-                    />
-                    </View>
-                    <Text style={styles.time}>00.02.36</Text>
-                </TouchableOpacity>
-            <View>
-                <Image
-                    style={styles.footer}
-                    resizeMode="cover"
-                    source={require("../assets/pink_scribble2.jpg")}
-                />
-            </View>
+                </View>
 
-            <View>
-                
             </View>
-            </View>
-            </View>
+        </View>
         </View>
     )
 };
 
 const styles = StyleSheet.create({
     overlay: {
-        backgroundColor: "rgba(165, 132, 130,0.2)",
+        backgroundColor: "rgba(209, 161, 165, 0.5)",
         ...StyleSheet.absoluteFillObject, 
     },
     header: {
@@ -88,10 +115,9 @@ const styles = StyleSheet.create({
     },
     footer: {
         width: 405,
-        height: 160,
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "#e0c4a1",
+        height: 180,
+        marginTop: 20,
+        marginBottom: 20,
     },
     app_name: {
         color: "#83433d",
@@ -140,8 +166,72 @@ const styles = StyleSheet.create({
     },
     time: {
         fontSize: 30,
-        color: "#83433d",
+        color: "white",
         marginLeft: 145,
+        fontWeight: "bold",
+    },
+    btns_div: {
+        flex: 1,
+        flexDirection: "row",
+    },
+    btns: {
+        flex: 1,
+        flexDirection: "row",
+        marginLeft: 60,
+        marginTop: 45,
+        backgroundColor: "#fcacbc",
+        ...StyleSheet.absoluteFillObject,
+        width: 300,
+        height: 80, 
+        borderRadius: 25,
+    },
+    cancel_btn: {
+        width: 90,
+        height: 70,
+        paddingTop: 10,
+        paddingLeft: 10,
+    },
+    cancel_btn_img: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    save_btn: {
+        width: 90,
+        height: 70,
+        padding: 10,
+        paddingLeft: 140,
+        paddingTop: 10,
+        paddingRight: 10,
+    },
+    save_btn_image: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    pause_play_btn: {
+        backgroundColor: "#fcacbc",
+        width: 120,
+        height: 120,
+        padding: 15,
+        borderRadius: 55,
+        zIndex: 1,
+        position: "absolute",
+        left: 150,
+        top: 30,
+        borderStyle: "solid",
+        borderWeight: 1,
+        borderColor: "white",
+    },
+    pause_play_btn_img: {
+        width: 90,
+        height: 90,
+        borderStyle: "solid",
+        borderWidth: 5,
+        borderColor: "white",
+        borderRadius: 75,
     }
 })
 
