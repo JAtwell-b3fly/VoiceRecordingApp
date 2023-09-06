@@ -1,7 +1,36 @@
-import react from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput} from "react-native";
+import react, { useRef, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput, Animated} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 const Share = () => {
+
+    const navigation = useNavigation();
+
+    const translateY = useRef(new Animated.Value(700)).current;
+
+    const slideOut = () => {
+        //Start the slide out animation when navigating from the share screen back to the list screen
+
+        Animated.timing(translateY, {
+            toValue: 700, //Move the share box off screen in the y axis direction
+            duration: 500,
+            useNativeDriver: false,
+        }).start(() =>{
+            //Navigate to the list screen after the animation completes its movement
+            navigation.navigate("List");
+        });
+    };
+
+    useEffect(() => {
+        //Start the slide in animation when navigating from the list screen to the share screen
+
+        Animated.timing(translateY, {
+            toValue: 0, //The final position where the component should stop
+            duration: 500, //Duration of the animation in milliseconds
+            useNativeDriver: false, //Set this to true if possible for better performance
+        }).start();
+    }, []);
+
     return(
         <View style={styles.screen}>
             <View style={styles.greyed_out}>
@@ -14,7 +43,9 @@ const Share = () => {
 
                     <View style={styles.heading_band}>
                         <View style={styles.menu_div}>
-                            <TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("List")}
+                            >
                                 <Image
                                     source={require("../assets/left-chevron.png")}
                                     style={styles.menu}
@@ -81,7 +112,8 @@ const Share = () => {
                         </View>
                  </View>
 
-                    <View style={styles.share_box}>
+                 
+                    <Animated.View style={[styles.share_box, {transform: [{ translateY }] }]}>
                         <Text style={styles.line}>_____________</Text>
 
                         <Text style={styles.friends}>Share with your friends</Text>
@@ -168,10 +200,11 @@ const Share = () => {
 
                         </View>
 
-                        <TouchableOpacity style={styles.cancel_btn}>
+                        <TouchableOpacity style={styles.cancel_btn} onPress={slideOut}>
                                 <Text style={styles.cancel_btn_text}>Cancel</Text>
                         </TouchableOpacity>
-                    </View>
+
+                    </Animated.View>
 
         </View>
 
@@ -184,16 +217,16 @@ const Share = () => {
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        backgroundColor: "rgba(209, 161, 165, 0.5)",
-        ...StyleSheet.absoluteFillObject, 
-    },
+    //overlay: {
+    //    backgroundColor: "rgba(209, 161, 165, 0.5)",
+    //    ...StyleSheet.absoluteFillObject, 
+    //},
     header: {
         flex: 1,
     },
     screen: {
         flex: 1,
-        position: "relative"
+        position: "relative",
     },
     avatar_div: {
         width: 50,
@@ -215,6 +248,7 @@ const styles = StyleSheet.create({
         paddingLeft: 30,
         paddingRight: 30,
         width: 410,
+        backgroundColor: "rgba(63, 42, 45, 0.1)",
     },
     search: {
         color: "#83433d",
@@ -258,11 +292,10 @@ const styles = StyleSheet.create({
         height: 100,
         width: 360,
         flexDirection: "row",
-        backgroundColor: "white",
+        backgroundColor: "rgba(63, 42, 45, 0.1)",
         marginTop: 20,
         padding: 20,
         borderRadius: 25,
-        zIndex: -1,
     },
     play_pause_btn: {
         width: 50,
@@ -287,9 +320,8 @@ const styles = StyleSheet.create({
         fontSize: 15
     },
     greyed_out: {
-        backgroundColor: "rgba(63, 42, 45,0.7)",
-        zIndex: 1,
-        position: "relative"
+        backgroundColor: "rgba(63, 42, 45, 0.7)",
+        ...StyleSheet.absoluteFillObject,
     },
     share_box: {
         zIndex: 1,

@@ -1,9 +1,14 @@
-import react from "react";
+import {react, useState} from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 const Home = () => {
+
+    const navigation = useNavigation();
+
+//________________________________________________________________________________________________________________________
     return(
-        <View>
+        <View style={styles.main}>
         <View style={styles.header}>
             <View style={styles.logo_container}>
                 <Image
@@ -31,7 +36,8 @@ const Home = () => {
             </View>
 
             <View style={styles.content}>
-                <TouchableOpacity style={styles.btn}>
+                <TouchableOpacity style={styles.btn}
+                onPress = {() => navigation.navigate("Recording")}>
                     <Image
                         style={styles.btn_image}
                         resizeMode="cover"
@@ -42,7 +48,8 @@ const Home = () => {
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.btn}>
+                <TouchableOpacity style={styles.btn}
+                onPress = {() => navigation.navigate("List")}>
                     <Image
                         style={styles.btn_image}
                         resizeMode="cover"
@@ -142,7 +149,14 @@ const styles = StyleSheet.create({
         zIndex: 1,
         height: 100,
         width: "100%",
-        borderRadius: 15,
+        borderRadius: 0,
+    },
+    link: {
+        marginLeft: 20,
+        marginTop: 20,
+    },
+    main: {
+        flex: 1,
     }
 })
 
