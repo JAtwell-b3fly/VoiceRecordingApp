@@ -8,11 +8,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 //Components
 
-import { RecordingProvider } from './components/ReduxContext';
 import Home from './components/Home';
 import Recording from './components/Recording';
 import List from './components/List';
 import Share from './components/Share';
+import AppNavigator from './components/AppNavigator';
 
 //Stack Navigator
 const Stack = createStackNavigator();
@@ -20,26 +20,7 @@ const Stack = createStackNavigator();
 export default function App() {
 
   return (
-    <RecordingProvider>
-    <NavigationContainer>
-      <Stack.Navigator screenOptions = {{headerShown: false, //Hide the navigation header
-      }}>
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen 
-                        name="Recording" 
-                        component={Recording}
-        />
-        <Stack.Screen 
-                        name="List" 
-                        component={List}
-        />
-        <Stack.Screen 
-                        name="Share" 
-                        component={Share} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-    </RecordingProvider>
+    <AppNavigator />
   );
 }
 

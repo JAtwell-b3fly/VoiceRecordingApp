@@ -207,6 +207,7 @@ const SaveRecording = () => {
 
         //Create an object to store your recording data
         const recordingData = {
+            id: recordings.length + 2,
             recording: recording.recording,
             creationDate: recording.creationDate,
             sound: recording.sound,

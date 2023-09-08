@@ -1,8 +1,9 @@
 import {react, useState} from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput} from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput, ScrollView} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Audio } from "expo-av";
 import { useRecording } from "./ReduxContext";
+import { FlatList } from "react-native-gesture-handler";
 
 const List = () => {
 
@@ -13,7 +14,6 @@ const List = () => {
     const route = useRoute();
 
     const { 
-        recordings, 
         setRecordings, 
         recording, 
         setRecording,
@@ -25,15 +25,17 @@ const List = () => {
         setSound,
         } = useRecording();
 
+        const {recordings} = useRecording();
+
     //___________________________________________________________________________________________________________________________
 
     //Sort the Recording List in Ascending Order
 
-    /*recordings.sort((a, b) => {
+    recordings.sort((a, b) => {
         const MonthA = getMonthFromDate(a.creationDate);
         const MonthB = getMonthFromDate(b.creationDate);
-        return MonthA.locationCompare(MonthB);
-    })*/
+        return MonthA.localeCompare(MonthB);
+    })
 
     //__________________________________________________________________________________________________________________________________________
 
@@ -51,7 +53,7 @@ const List = () => {
         const minutes = currentDate.getMinutes();
         const seconds = currentDate.getSeconds();
 
-        const formattedDate = `${dayOfWeek}, ${month}, ${day}, ${year}  ${hours}:${minutes}:${seconds}`;
+        const formattedDate = `${month}, ${day}, ${year}  ${hours}:${minutes}:${seconds}`;
         return formattedDate;
     }
 
@@ -116,8 +118,8 @@ const stopPlayback = async() => {
 
     //Delete Recording Function
     
-    const deleteRecording = ({id}) => {
-        setRecordings(recordings.filter((recording) => recording.id !== id));
+    const deleteRecording = (idToDelete) => {
+        setRecordings(recordings.filter((recording) => recording.id !== idToDelete));
     }
 
     //____________________________________________________________________________________________________________________________________
@@ -125,6 +127,9 @@ const stopPlayback = async() => {
     //Map through the sorted recordings and display them
 
     function recordingLines () {
+        console.log("Recording Lines - Recordings: ", recordings);
+
+        try{
         return recordings.map((recordingLine, index) => {
             return(
                 <View key={index} style={styles.item_box}>
@@ -141,7 +146,7 @@ const stopPlayback = async() => {
                         />
                     </TouchableOpacity>
     
-                    <View>
+                    <View style={styles.titlediv}>
                         <Text style={styles.recording_title}>{recordingLine.title || "User Interview"}</Text>
                         <Text>{recordingLine.creationDate || "Full Date | Time"}</Text>
                         <Text>{recordingLine.duration || "hh:mm:ss"}</Text>
@@ -150,7 +155,7 @@ const stopPlayback = async() => {
                     <View style={styles.btns}>
                         <TouchableOpacity 
                             key={index}
-                            onPress={deleteRecording}
+                            onPress={() => deleteRecording(recordingLine.id)}
                         >
                             <Image
                                 style={styles.delete_btn_img}
@@ -172,6 +177,10 @@ const stopPlayback = async() => {
                 </View>
                 )
             })
+        } catch (error) {
+            console.error("Error in recordingLines: ", error);
+            return "The List is either empty or cannot be located"; //Return a default value or handle the error gracefully
+        }
     }
     
         
@@ -210,61 +219,18 @@ const stopPlayback = async() => {
                         </View>
                     </View>
 
+                    <ScrollView>
                     <View style={styles.content}>
                         <Text style={styles.date_category}>August 2023</Text>
-
-                        {recordingLines}
-
-                        <View style={styles.item_box}>
-    
-                    <TouchableOpacity
-                        style={styles.play_pause_btn}
-                        onPress = {isPlaying ? stopPlayback : playRecording} //Toggle between play and pause function
-                        title={isPlaying ? "Stop Playback" : "Start Playback"} //Toggle the button titles
-                    >
-                        <Image
-                            style={styles.play_pause_btn}
-                            source={isPlaying ? require("../assets/play_purple.png") : require("../assets/play_purple.png")}
-                        />
-                    </TouchableOpacity>
-    
-                    <View>
-                        <Text style={styles.recording_title}>{"recordingLine.title" || "User Interview"}</Text>
-                        <Text>{"recordingLine.creationDate" || "Full Date | Time"}</Text>
-                        <Text>{"recordingLine.duration" || "hh:mm:ss"}</Text>
+                            {recordingLines()}
                     </View>
-    
-                    <View style={styles.btns}>
-                        <TouchableOpacity 
-                            
-                            onPress={deleteRecording}
-                        >
-                            <Image
-                                style={styles.delete_btn_img}
-                                source={require("../assets/trash_red.png")}
-                            />
-                        </TouchableOpacity>
-    
-                        <TouchableOpacity
-                           
-                            onPress={() => navigation.navigate("Share")}
-                        >
-                            <Image
-                                style={styles.share_btn_img}
-                                source={require("../assets/share_blue.png")}
-                            />
-                        </TouchableOpacity>
-                    </View>
-        
-                </View>
-
-                    <View>
-
-                </View>
+                    </ScrollView>
+                <View>
 
             </View>
+
         </View>
-        </View>
+    </View>
     )
 };
 
@@ -374,6 +340,10 @@ const styles = StyleSheet.create({
         textAlign: "left",
         fontSize: 17,
         fontWeight: "600",
+    },
+    titlediv: {
+        flex: 1,
+        width: 250,
     }
 })
 
