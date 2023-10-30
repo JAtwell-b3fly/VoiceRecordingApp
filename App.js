@@ -16,8 +16,15 @@ import AppNavigator from './components/AppNavigator';
 
 //Stack Navigator
 const Stack = createStackNavigator();
+import List from './components/List';
+import Share from './components/Share';
+import AppNavigator from './components/AppNavigator';
+
+//Stack Navigator
+const Stack = createStackNavigator();
 
 export default function App() {
+
 
   return (
       <AppNavigator />

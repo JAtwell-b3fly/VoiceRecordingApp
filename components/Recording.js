@@ -287,9 +287,23 @@ const SaveRecording = async() => {
     return(
         <View style={styles.main}>
             <View style={styles.header}>
+        <View style={styles.main}>
+            <View style={styles.header}>
 
                 <View style={styles.overlay}></View>
+                <View style={styles.overlay}></View>
 
+                    <View style={styles.heading_band}>
+                        <View style={styles.menu_div}>
+                            <TouchableOpacity
+                                onPress = {() => navigation.navigate("Home")}
+                            >
+                                <Image
+                                    source={require("../assets/left-chevron.png")}
+                                    style={styles.menu}
+                                />
+                            </TouchableOpacity>
+                        </View>
                     <View style={styles.heading_band}>
                         <View style={styles.menu_div}>
                             <TouchableOpacity
@@ -323,7 +337,61 @@ const SaveRecording = async() => {
                             </View>
                         </View>
                     </View>
+                        <View style={styles.app_name_container}>
+                            <TextInput 
+                                style={styles.app_name}
+                                placeholder="Add Title..."
+                                value ={recordingName}
+                                onChangeText={(text) => setRecordingName(text)}
+                                require>
+                                
+                            </TextInput>
 
+                            <View style={styles.avatar_div}>
+                                <TouchableOpacity>
+                                    <Image
+                                        style={styles.avatar}
+                                        source={require("../assets/avatar1.jpg")}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.content}>
+
+                        <Text>
+                            {message}
+                        </Text>
+
+                        <View style={styles.record_btn_fill}>
+                        
+                            {recording ? (
+                                //Display the "Stop Recording" image as a button when recording is true
+                                <>
+                                    <TouchableOpacity onPress={stopRecording} title="Stop Recording">
+                               
+                                        <Image
+                                            style={styles.record_btn_active}
+                                            source={require("../assets/neon_pink_mic.jpg")}
+                                        />
+                                    </TouchableOpacity>
+                                </>  
+                            ) : ( 
+                                //Display the "Start Recording" image as a button when recording is false  
+                                <>
+                                    <TouchableOpacity onPress={startRecording} title="Start Recording">
+                               
+                                        <Image
+                                            style={styles.record_btn}
+                                            source={require("../assets/neon_pink_mic.jpg")}
+                                        />
+                                    </TouchableOpacity>
+                                </>                          
+                            )}
+                        </View>
+                        
                     <View style={styles.content}>
 
                         <Text>
@@ -388,6 +456,50 @@ const SaveRecording = async() => {
                         </TouchableOpacity>
                     </View>
 
+                        <Text style={styles.time}>{recordingDuration}  seconds</Text>
+                    <View>
+
+                        <Image
+                            source={require("../assets/sound_wave.jpg")}
+                            style={styles.wave}
+                        />
+
+                <View style={styles.btns_div}>
+                    <View style={styles.btns}>
+                        <TouchableOpacity style={styles.cancel_btn}
+                        onPress={cancelRecording}
+                        >
+                            <Image
+                                style={styles.cancel_btn_img}
+                                source={require("../assets/cross.png")}
+                            />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.save_btn}
+                                onPress={SaveRecording}
+                        >
+                            <Image
+                                style={styles.save_btn_image}
+                                source={require("../assets/check.png")}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                            <TouchableOpacity
+                                                style={styles.pause_play_btn}
+                                                onPress = {isPlaying ? stopPlayback : playRecording} //Toggle between play and pause function
+                                                title={isPlaying ? "Stop Playback" : "Start Playback"} //Toggle the button titles
+                            >
+                                <Image
+                                    style={styles.pause_play_btn_img}
+                                    source={isPlaying ? require("../assets/pause_pink_red.png") : require("../assets/play_red_pink.png")} //Toggle between the play and pause icons
+                                />
+                            </TouchableOpacity>
+                        
+                    </View>
+
+                </View>
+
                             <TouchableOpacity
                                                 style={styles.pause_play_btn}
                                                 onPress = {isPlaying ? stopPlayback : playRecording} //Toggle between play and pause function
@@ -406,11 +518,13 @@ const SaveRecording = async() => {
             </View>
         </View>
         
+        
     )
 };
 
 const styles = StyleSheet.create({
     overlay: {
+        backgroundColor: "rgba(209, 161, 165, 0.2)",
         backgroundColor: "rgba(209, 161, 165, 0.2)",
         ...StyleSheet.absoluteFillObject, 
     },
@@ -436,9 +550,13 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 10,
         width: 410,
+        width: 410,
     },
     footer: {
         width: 405,
+        height: 180,
+        marginTop: 20,
+        marginBottom: 20,
         height: 180,
         marginTop: 20,
         marginBottom: 20,
@@ -446,7 +564,11 @@ const styles = StyleSheet.create({
     app_name: {
         color: "#83433d",
         fontSize: 20,
+        fontSize: 20,
         fontWeight: "bold",
+        padding: 15,
+        textAlign: "left",
+        paddingLeft: 40,
         padding: 15,
         textAlign: "left",
         paddingLeft: 40,
@@ -456,6 +578,7 @@ const styles = StyleSheet.create({
         top: 30,
         left: 95,
         position: "absolute",
+        width: "100%"
         width: "100%"
     },
     menu_div: {
@@ -476,12 +599,21 @@ const styles = StyleSheet.create({
         height: 100,
         width: "100%",
         borderRadius: 0,
+        borderRadius: 0,
     },
     record_btn_fill: {
         height: 380,
         bottom: 100,
         top: 130,
         left: 120,
+    },
+    record_btn_active: {
+        width: 180,
+        height: 180,
+        borderRadius: 100,
+        borderWidth: 15,
+        borderStyle: "solid",
+        borderColor: "#3f2a2d",
     },
     record_btn_active: {
         width: 180,
@@ -502,7 +634,103 @@ const styles = StyleSheet.create({
     time: {
         fontSize: 30,
         color: "black",
+        color: "black",
         marginLeft: 145,
+        fontWeight: "400",
+    },
+    btns_div: {
+        flex: 1,
+        flexDirection: "row",
+    },
+    btns: {
+        flex: 1,
+        flexDirection: "row",
+        marginLeft: 60,
+        marginTop: 45,
+        backgroundColor: "#fcacbc",
+        ...StyleSheet.absoluteFillObject,
+        width: 300,
+        height: 80, 
+        borderRadius: 25,
+    },
+    cancel_btn: {
+        width: 90,
+        height: 70,
+        paddingTop: 10,
+        paddingLeft: 10,
+    },
+    cancel_btn_img: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    save_btn: {
+        width: 90,
+        height: 70,
+        padding: 10,
+        paddingLeft: 140,
+        paddingTop: 10,
+        paddingRight: 10,
+    },
+    save_btn_image: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    pause_play_btn: {
+        backgroundColor: "#fcacbc",
+        width: 120,
+        height: 120,
+        padding: 15,
+        borderRadius: 55,
+        zIndex: 1,
+        position: "absolute",
+        left: 150,
+        top: 30,
+        borderStyle: "solid",
+        borderWeight: 1,
+        borderColor: "white",
+    },
+    pause_play_btn_img: {
+        width: 90,
+        height: 90,
+        borderStyle: "solid",
+        borderWidth: 5,
+        borderColor: "white",
+        borderRadius: 75,
+    },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    fill: {
+        flex: 1,
+        margin:16
+    },
+    funcbutton: {
+        margin: 16,
+        backgroundColor: "black",
+        color: "white",
+    },
+    newsec: {
+        marginTop: 150,
+        marginBottom: 100,
+        width: 430,
+    },
+    clearbtn: {
+        backgroundColor: "black",
+        color: "white",
+    },
+    main: {
+        flex: 1,
+    },
+    wave: {
+        height: 150,
+        width: 410,
+        marginTop: 20,
         fontWeight: "400",
     },
     btns_div: {

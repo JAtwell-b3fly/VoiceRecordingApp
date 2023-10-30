@@ -19,6 +19,8 @@
     "expo": "~49.0.7",
     "expo-av": "~13.4.1",
     "expo-router": "^2.0.4",
+    "expo-av": "~13.4.1",
+    "expo-router": "^2.0.4",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",
     "react-native": "0.72.3",

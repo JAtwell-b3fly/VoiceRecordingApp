@@ -1,4 +1,4 @@
-import react, { useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput, Animated} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -400,5 +400,3 @@ const styles = StyleSheet.create({
         padding: 20,
     }
 })
-
-export default Share;
