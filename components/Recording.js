@@ -1,67 +1,417 @@
-import react from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
+import {React, useState, useEffect} from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Button, TextInput, Alert} from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from "react-redux";
+import {addRecording} from "../recordingsReducer/recordings";
+
+import { Audio } from "expo-av";
+import { useNavigation, useRoute } from "@react-navigation/native";
+
+import Loading from "./Loader";
 
 const Recording = () => {
+
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const recordings = useSelector((state) => state.recordings);
+    const route = useRoute();
+
+    const [recording, setRecording] = useState(null);
+    const [message, setMessage] = useState("");
+    const [recordingName, setRecordingName] = useState("");
+
+    //Recording or not
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+
+    //IsPlaying or not
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    //Sound or not
+    const [sound, setSound] = useState(null);
+
+    //recording instance
+    const [recordingInstance, setRecordingInstance] = useState(null);
+
+    //_____________________________________________________________________________________________________________________________________
+
+    //Duration Function
+    useEffect(() => {
+        //creating the empty interval variable
+        let interval;
+
+        if (isRecording) {
+            interval = setInterval(() => {
+                setRecordingDuration((prevDuration) => prevDuration + 1);
+            }, 1000) //update every second
+        } else {
+            clearInterval(interval);
+        };
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [isRecording, recordingDuration]); 
+
+//________________________________________________________________________________________________________________
+
+//Todays Date Function
+function dateToday () {
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const currentDate = new Date();
+    const dayOfWeek = weekdays[currentDate.getDay()];
+    const month = months[currentDate.getMonth()];
+    const day = currentDate.getDate();
+    const year = currentDate.getFullYear();
+    const hours = currentDate.getHours();
+    const minutes = currentDate.getMinutes();
+    const seconds = currentDate.getSeconds();
+
+    const formattedDate = `${dayOfWeek}, ${month}, ${day}, ${year}  ${hours}:${minutes}:${seconds}`;
+    return formattedDate;
+}
+
+//Start Recording Function
+async function startRecording () {
+    setIsRecording(true);
+
+    try {
+        const permission = await Audio.requestPermissionsAsync();
+
+        if (permission.status === "granted") {
+            await Audio.setAudioModeAsync({
+                allowRecordingIOS: true,
+                playInSilentModeIOS: true
+            });
+
+            const recordingObject = new Audio.Recording();
+
+            await recordingObject.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+            await recordingObject.startAsync();
+
+            setRecordingInstance(recordingObject);
+
+            const creationDate = dateToday();
+
+            setRecording({
+                recording: recordingObject,
+                creationDate: dateToday(),
+                sound: sound,
+            });
+
+            //Alert.alert("Recording Started")
+           
+        } else {
+            setMessage("Please grant permission to app to access microphone");
+        }
+    } catch (err) {
+        console.error("Failed to start recording", err);
+        setMessage("Failed to start recording. Please check yout microphone permission.")
+    };
+};
+
+//Stop Recording Function
+async function stopRecording () {
+    setIsRecording(false);
+
+    if (recordingInstance){
+
+    try {
+        await recordingInstance.stopAndUnloadAsync(); //Stop recording
+        const {sound} = await recordingInstance.createNewLoadedSoundAsync();
+
+       console.log("Recorded sound: ", sound);
+
+       //Reset the recording instance
+       setRecordingInstance(null);
+    } catch (err) {
+        console.log("Failed to stop recording", err);
+        setMessage("Failed to stop recording.");
+    }
+    }
+
+    Alert.alert("Recording Stopped");
+
+}
+
+//Start Playback Function
+const playRecording = async() => {
+    console.log("playRecording is called");
+    console.log("isPlaying:", isPlaying);
+    console.log("recording:", recording);
+
+    if(!isPlaying && recording) {
+            try {
+                if(sound) {
+                    //If the sound object already exists, just play it
+                    console.log("Resuming playback...");
+                    await sound.playAsync();
+                } else {
+                    //If the sound object does not exist, create and play it
+                    const {sound: newSound} = await Audio.Sound.createAsync({
+                       uri: recording.recording.getURI()
+                    });
+
+                    setSound(newSound);
+                    console.log("Playing...");
+                    await newSound.playAsync();
+                }
+
+                //update the isPlaying state
+                setIsPlaying(true);
+            } catch (err) {
+                console.error("Failed to play recording", err);
+            }
+    } else {
+        console.log("Playback is already in progress or recording is not available")
+    }
+};
+
+//Stop Playback Function
+const stopPlayback = async() => {
+    console.log("stopPlayback is called");
+    console.log("isPlaying:", isPlaying);
+    console.log("sound:", sound);
+
+    if(isPlaying && sound) {
+        try {
+            await sound.stopAsync();
+            await sound.unloadAsync();
+            setIsPlaying(false);
+        } catch (err) {
+            console.error("Failed to stop playback", err);
+        }
+    }
+   
+}
+
+//Cancel Recording Save Function
+const cancelRecording = () => {
+    if (recording) {
+        console.log("Recording was not saved to the recordings array due to cancelation.");
+
+        //Reset recording state after canceling
+        setRecording(null);
+        setRecordingDuration(0);
+        setRecordingName("");
+    }
+}
+
+// Serialize the sound into a URI
+function serializeSound(sound) {
+    if (sound) {
+        return sound.getURI();
+    }
+    return null;
+}
+
+//Save Recording Function
+const SaveRecording = async() => {
+        if (!recording) {
+            console.error("No recording to save");
+            return;
+        }    
+
+        if(!recordingName) {
+            console.error("Please enter a title for the recording.");
+            return;
+        }
+
+        //Serialise the recording object
+        const recordingUri = recording.recording._uri;
+
+        //Serialise the sound into a URI
+        const soundUri = serializeSound(recording.sound);
+
+        //Create an object to store your recording data
+        const recordingData = {
+            id: recordings.length + 2,
+            recording: recordingUri,
+            creationDate: recording.creationDate,
+            sound: soundUri,
+            title: recordingName,
+            duration: recordingDuration,
+        }
+
+        try {
+             //Update the state with the new recordings
+             dispatch(addRecording(recordingData))
+
+            //Store the updated recordings back in local storage
+            await AsyncStorage.setItem("recordings", JSON.stringify(recordings));
+
+           // Reset recording-related state variables
+            setRecording(null);
+            setSound(null);
+            setRecordingName("");
+            setRecordingDuration(0);
+
+            // Console log that the recording was successfully saved
+            console.log(`Recording "${recordingName}" successfully saved`);
+
+            Alert.alert("Recording Saved Successfully");
+
+        } catch (error) {
+            console.error("Error retrieving or storing recordings: ", error)
+        }   
+}
+
+//______________________________________________________________________________________________________
+
+    
+    function getDurationFormatted(milliseconds) {
+        const minutes = milliseconds / 1000 / 60;
+        const seconds = Math.round((minutes - Math.floor(minutes))  * 60);
+        return seconds < 10 ? `${Math.floor(minutes)}:0${seconds}`: `${Math.floor(minutes)}: 0${seconds}`;
+    }
+
+    //_________________________________________________________________________________________________________________________
+
+    function getRecordingLines() {
+        return recordings.map((recordingLine, index) => {
+            return(
+                <View key={index} style={styles.row}>
+                    <Text style={styles.fill}>Recording #{index + 1} | {recordingLine.duration} | {recordingLine.creationDate}</Text>
+                    {recordingLine.sound && (
+                    <Button style={styles.funcbutton} onPress = {() => recordingLine.sound.replayAsync()} title="Play"></Button>
+                    )}
+                </View>
+            )
+        })
+    }
+
+    //_________________________________________________________________________________________________________________________________
+
     return(
-        <View>
-        <View style={styles.header}>
+        <View style={styles.main}>
+            <View style={styles.header}>
 
-            <View style={styles.overlay}></View>
+                <View style={styles.overlay}></View>
 
-                <View style={styles.heading_band}>
-                    <View style={styles.menu_div}>
-                        <TouchableOpacity>
+                    <View style={styles.heading_band}>
+                        <View style={styles.menu_div}>
+                            <TouchableOpacity
+                                onPress = {() => navigation.navigate("Home")}
+                            >
+                                <Image
+                                    source={require("../assets/left-chevron.png")}
+                                    style={styles.menu}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.app_name_container}>
+                            <TextInput 
+                                style={styles.app_name}
+                                placeholder="Add Title..."
+                                value ={recordingName}
+                                onChangeText={(text) => setRecordingName(text)}
+                                require>
+                                
+                            </TextInput>
+
+                            <View style={styles.avatar_div}>
+                                <TouchableOpacity>
+                                    <Image
+                                        style={styles.avatar}
+                                        source={require("../assets/avatar1.jpg")}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.content}>
+
+                        <Text>
+                            {message}
+                        </Text>
+
+                        <View style={styles.record_btn_fill}>
+                        
+                            {recording ? (
+                                //Display the "Stop Recording" image as a button when recording is true
+                                <>
+                                    <TouchableOpacity onPress={stopRecording} title="Stop Recording">
+                               
+                                        <Image
+                                            style={styles.record_btn_active}
+                                            source={require("../assets/neon_pink_mic.jpg")}
+                                        />
+                                    </TouchableOpacity>
+                                </>  
+                            ) : ( 
+                                //Display the "Start Recording" image as a button when recording is false  
+                                <>
+                                    <TouchableOpacity onPress={startRecording} title="Start Recording">
+                               
+                                        <Image
+                                            style={styles.record_btn}
+                                            source={require("../assets/neon_pink_mic.jpg")}
+                                        />
+                                    </TouchableOpacity>
+                                </>                          
+                            )}
+                        </View>
+                        
+                    </View>
+
+                        <Text style={styles.time}>{recordingDuration}  seconds</Text>
+                    <View>
+
+                        <Image
+                            source={require("../assets/sound_wave.jpg")}
+                            style={styles.wave}
+                        />
+
+                <View style={styles.btns_div}>
+                    <View style={styles.btns}>
+                        <TouchableOpacity style={styles.cancel_btn}
+                        onPress={cancelRecording}
+                        >
                             <Image
-                                source={require("../assets/menu.png")}
-                                style={styles.menu}
+                                style={styles.cancel_btn_img}
+                                source={require("../assets/cross.png")}
+                            />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.save_btn}
+                                onPress={SaveRecording}
+                        >
+                            <Image
+                                style={styles.save_btn_image}
+                                source={require("../assets/check.png")}
                             />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.app_name_container}>
-                        <Text style={styles.app_name}>Add Audio Title</Text>
-                        <View style={styles.avatar_div}>
-                            <TouchableOpacity>
+                            <TouchableOpacity
+                                                style={styles.pause_play_btn}
+                                                onPress = {isPlaying ? stopPlayback : playRecording} //Toggle between play and pause function
+                                                title={isPlaying ? "Stop Playback" : "Start Playback"} //Toggle the button titles
+                            >
                                 <Image
-                                    style={styles.avatar}
-                                    source={require("../assets/avatar1.jpg")}
-                                    resizeMode="contain"
+                                    style={styles.pause_play_btn_img}
+                                    source={isPlaying ? require("../assets/pause_pink_red.png") : require("../assets/play_red_pink.png")} //Toggle between the play and pause icons
                                 />
                             </TouchableOpacity>
-                        </View>
+                        
                     </View>
-            </View>
 
-            <View style={styles.content}>
-                <TouchableOpacity>
-                    <View style={styles.record_btn_fill}>
-                    <Image
-                        style={styles.record_btn}
-                        source={require("../assets/neon_pink_mic.jpg")}
-                    />
-                    </View>
-                    <Text style={styles.time}>00.02.36</Text>
-                </TouchableOpacity>
-            <View>
-                <Image
-                    style={styles.footer}
-                    resizeMode="cover"
-                    source={require("../assets/pink_scribble2.jpg")}
-                />
-            </View>
+                </View>
 
-            <View>
-                
-            </View>
-            </View>
             </View>
         </View>
+        
     )
 };
 
 const styles = StyleSheet.create({
     overlay: {
-        backgroundColor: "rgba(165, 132, 130,0.2)",
+        backgroundColor: "rgba(209, 161, 165, 0.2)",
         ...StyleSheet.absoluteFillObject, 
     },
     header: {
@@ -85,25 +435,28 @@ const styles = StyleSheet.create({
     content: {
         marginTop: 20,
         marginBottom: 10,
+        width: 410,
     },
     footer: {
         width: 405,
-        height: 160,
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "#e0c4a1",
+        height: 180,
+        marginTop: 20,
+        marginBottom: 20,
     },
     app_name: {
         color: "#83433d",
-        fontSize: 26,
+        fontSize: 20,
         fontWeight: "bold",
-        padding: 10,
+        padding: 15,
+        textAlign: "left",
+        paddingLeft: 40,
     },
     app_name_container: {
         zIndex:1,
         top: 30,
         left: 95,
         position: "absolute",
+        width: "100%"
     },
     menu_div: {
         zIndex: 1,
@@ -122,13 +475,21 @@ const styles = StyleSheet.create({
         zIndex: 1,
         height: 100,
         width: "100%",
-        borderRadius: 15,
+        borderRadius: 0,
     },
     record_btn_fill: {
         height: 380,
         bottom: 100,
         top: 130,
         left: 120,
+    },
+    record_btn_active: {
+        width: 180,
+        height: 180,
+        borderRadius: 100,
+        borderWidth: 15,
+        borderStyle: "solid",
+        borderColor: "#3f2a2d",
     },
     record_btn: {
         width: 180,
@@ -140,8 +501,103 @@ const styles = StyleSheet.create({
     },
     time: {
         fontSize: 30,
-        color: "#83433d",
+        color: "black",
         marginLeft: 145,
+        fontWeight: "400",
+    },
+    btns_div: {
+        flex: 1,
+        flexDirection: "row",
+    },
+    btns: {
+        flex: 1,
+        flexDirection: "row",
+        marginLeft: 60,
+        marginTop: 45,
+        backgroundColor: "#fcacbc",
+        ...StyleSheet.absoluteFillObject,
+        width: 300,
+        height: 80, 
+        borderRadius: 25,
+    },
+    cancel_btn: {
+        width: 90,
+        height: 70,
+        paddingTop: 10,
+        paddingLeft: 10,
+    },
+    cancel_btn_img: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    save_btn: {
+        width: 90,
+        height: 70,
+        padding: 10,
+        paddingLeft: 140,
+        paddingTop: 10,
+        paddingRight: 10,
+    },
+    save_btn_image: {
+        width: 60,
+        height: 60,
+        backgroundColor: "white",
+        borderRadius: 25,
+    },
+    pause_play_btn: {
+        backgroundColor: "#fcacbc",
+        width: 120,
+        height: 120,
+        padding: 15,
+        borderRadius: 55,
+        zIndex: 1,
+        position: "absolute",
+        left: 150,
+        top: 30,
+        borderStyle: "solid",
+        borderWeight: 1,
+        borderColor: "white",
+    },
+    pause_play_btn_img: {
+        width: 90,
+        height: 90,
+        borderStyle: "solid",
+        borderWidth: 5,
+        borderColor: "white",
+        borderRadius: 75,
+    },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    fill: {
+        flex: 1,
+        margin:16
+    },
+    funcbutton: {
+        margin: 16,
+        backgroundColor: "black",
+        color: "white",
+    },
+    newsec: {
+        marginTop: 150,
+        marginBottom: 100,
+        width: 430,
+    },
+    clearbtn: {
+        backgroundColor: "black",
+        color: "white",
+    },
+    main: {
+        flex: 1,
+    },
+    wave: {
+        height: 150,
+        width: 410,
+        marginTop: 20,
     }
 })
 

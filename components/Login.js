@@ -1,27 +1,44 @@
 import {React, useState} from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet} from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput, Alert} from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import { logIn } from "../authReducer/auth";
 
 import Loading from "./Loader";
 
-const Home = () => {
+const Login = () => {
 
     const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector((state) => state.authentication.isAuthenticated);
 
-    
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleLogin = () => {
+        //Dispatch the logIn action with email and password
+        dispatch(logIn({email, password}));
+
+        if (isAuthenticated) {
+            //User is authenticated, navigate to the home screen or show a success message
+            Alert.alert("Success", "Login Successful");
+            navigation.navigate("Home");
+        } else {
+            //User is not authenticated, show an error message
+            Alert.alert("Error", "Invalid email or password");
+        }
+    }
 
 //________________________________________________________________________________________________________________________
     return(
         <View style={styles.main}>
         <View style={styles.header}>
             <View style={styles.logo_container}>
-                <TouchableOpacity>
                 <Image
                     source={require("../assets/scream.jpg")}
                     resizeMode="cover"
                     style={styles.logo}
                 />
-                </TouchableOpacity>
 
             <View style={styles.overlay}></View>
 
@@ -29,7 +46,7 @@ const Home = () => {
                     <View style={styles.menu_div}>
                     <TouchableOpacity>
                         <Image
-                            source={require("../assets/logout.png")}
+                            source={require("../assets/menu.png")}
                             style={styles.menu}
                         />
                     </TouchableOpacity>
@@ -42,29 +59,21 @@ const Home = () => {
             </View>
 
             <View style={styles.content}>
-                <TouchableOpacity style={styles.btn}
-                onPress = {() => navigation.navigate("Recording")}>
-                    <Image
-                        style={styles.btn_image}
-                        resizeMode="cover"
-                        source={require("../assets/anime_mic.jpg")}
-                    />
-                    <Text style={styles.btn_text}>
-                        New Recording
-                    </Text>
-                </TouchableOpacity>
+                <TextInput style={styles.input} value={email} placeholder="Email Address" onChangeText={(text) => setEmail(text)} />
+                <TextInput style={styles.input} value={password} placeholder="Password" onChangeText={(text) => setPassword(text)} />
 
-                <TouchableOpacity style={styles.btn}
-                onPress = {() => navigation.navigate("List")}>
+                <TouchableOpacity style={styles.btn} onPress={handleLogin}>
                     <Image
                         style={styles.btn_image}
                         resizeMode="cover"
                         source={require("../assets/casette.jpg")}
                     />
                     <Text style={styles.btn_text}>
-                        Recording List
+                        Login
                     </Text>
                 </TouchableOpacity>
+
+               <TouchableOpacity style={{flexDirection: "row", marginBottom: 15}} onPress={() => navigation.navigate("SignUp")}><Text style={styles.link}>Don't Have An Account?</Text><Text style={styles.link2}> Sign Up</Text></TouchableOpacity>
             </View>
 
             <View>
@@ -76,7 +85,6 @@ const Home = () => {
             </View>
         </View>
         </View>
-        
     )
 };
 
@@ -164,7 +172,31 @@ const styles = StyleSheet.create({
     },
     main: {
         flex: 1,
+    },
+    input: {
+        borderColor: "#cc6c7c",
+        width: "90%",
+        height: 50,
+        padding: 15,
+        margin: 20,
+        borderWidth: 2,
+        borderRadius: 15,
+        textAlign: "center",
+        borderStyle: "solid",
+        fontSize: 18,
+        color: "#83433d",
+        marginBottom: 10,
+        marginTop: 10,
+    },
+    link: {
+        fontSize: 18,
+        marginLeft: 50, 
+    },
+    link2: {
+        fontSize: 18,
+        marginLeft: 10, 
+        fontWeight: "600"
     }
 })
 
-export default Home;
+export default Login;
